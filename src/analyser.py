@@ -1,4 +1,4 @@
-from src.loader import load_corpus, load_qrels, load_queries
+from src.loader import load_dataset
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -72,9 +72,7 @@ if __name__ == "__main__":
     # Load the dataset
 
     print("Loading dataset...")
-    corpus = load_corpus(Path("dataset/corpus.jsonl"))
-    queries = load_queries(Path("dataset/queries.jsonl"))
-    qrels_valid = load_qrels(Path("dataset/valid.tsv"))
+    corpus, queries, qrels_valid = load_dataset()
 
     print(f"Loaded {len(corpus)} documents in corpus")
     print(f"Loaded {len(queries)} queries")

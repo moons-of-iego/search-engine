@@ -1,10 +1,31 @@
 import json
-from typing import Dict
+import pickle
+from typing import Dict, TypeVar, Callable
 from pathlib import Path
 import pandas as pd
 
+T = TypeVar("T")
+CACHE_DIR = Path(".cache")
 
-def load_jsonl(file_path: Path):
+
+def _load_with_cache(
+    cache_name: str, loader_fn: Callable[[Path], T], raw_path: Path
+) -> T:
+    """Charge depuis le cache pickle s'il existe, sinon parse le fichier brut et le sauvegarde."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_path = CACHE_DIR / cache_name
+
+    if cache_path.exists():
+        with cache_path.open("rb") as f:
+            return pickle.load(f)
+
+    data = loader_fn(raw_path)
+    with cache_path.open("wb") as f:
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+    return data
+
+
+def parse_jsonl(file_path: Path):
     """Generic JSONL files loader.
 
     Args:
@@ -21,23 +42,23 @@ def load_jsonl(file_path: Path):
     return res
 
 
-def load_corpus(file_path: Path) -> Dict[str, Dict]:
+def _load_corpus(file_path: Path = Path("dataset/corpus.jsonl")) -> Dict[str, Dict]:
     """
     Load corpus data from JSONL file.
     Returns dictionary mapping document IDs to document data.
     """
-    return load_jsonl(file_path)
+    return _load_with_cache("corpus.pkl", parse_jsonl, file_path)
 
 
-def load_queries(file_path: Path) -> Dict[str, Dict]:
+def _load_queries(file_path: Path = Path("dataset/queries.jsonl")) -> Dict[str, Dict]:
     """
     Load query data from JSONL file.
     Returns dictionary mapping query IDs to query data.
     """
-    return load_jsonl(file_path)
+    return _load_with_cache("queries.pkl", parse_jsonl, file_path)
 
 
-def load_qrels(file_path: Path) -> Dict[str, Dict[str, int]]:
+def _parse_qrels(file_path: Path) -> Dict[str, Dict[str, int]]:
     """
     Load relevance judgments from TSV file.
     Returns dictionary mapping query IDs to candidate relevance scores.
@@ -50,13 +71,18 @@ def load_qrels(file_path: Path) -> Dict[str, Dict[str, int]]:
     return qrels
 
 
-if __name__ == "__main__":
-    # Load the dataset
-    print("Loading dataset...")
-    corpus = load_corpus(Path("dataset/corpus.jsonl"))
-    queries = load_queries(Path("dataset/queries.jsonl"))
-    qrels_valid = load_qrels(Path("dataset/valid.tsv"))
+def _load_qrels(file_path: Path = Path("dataset/valid.tsv")):
+    return _load_with_cache("qrels_valid.pkl", _parse_qrels, file_path)
 
-    print(f"Loaded {len(corpus)} documents in corpus")
-    print(f"Loaded {len(queries)} queries")
-    print(f"Loaded relevance for {len(qrels_valid)} queries (dataset)")
+
+def load_dataset():
+    corpus = _load_corpus()
+    queries = _load_queries()
+    qrels_valid = _load_qrels()
+    print("Loaded dataset in cache.")
+
+    return corpus, queries, qrels_valid
+
+
+if __name__ == "__main__":
+    load_dataset()

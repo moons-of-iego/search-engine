@@ -11,10 +11,12 @@ wheels/
 
 # macOS files
 .DS_Store
+.vscode/
 
 # data
 dataset/
 dataset.zip
+.cache/
 
 # Centrale Lyon subject
 BE_CS2.ipynb
