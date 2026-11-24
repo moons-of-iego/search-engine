@@ -1,0 +1,19 @@
+[project]
+name = "be2-data-science-search-engine"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "makxence", email = "maxence.dordenart@etu.ec-lyon.fr" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "pandas>=3.1.1",
+    "seaborn>=0.13.2",
+]
+
+[project.scripts]
+be2-data-science-search-engine = "be2_data_science_search_engine:main"
+
+[tool.uv]
+package = false
