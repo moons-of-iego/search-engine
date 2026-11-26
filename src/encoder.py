@@ -3,19 +3,19 @@ from scipy.sparse import find, spmatrix
 from src.loader import load_dataset
 import pandas as pd
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-def encode_matrix():
+def encode_matrix(corpus: dict) -> tuple[spmatrix, CountVectorizer, list[str]]:
     """
     Encode corpus data on a Bag-of_words matrix. Each line represent a corpus document title and each column is a word.
     Each cell count the number of apparitions of the word on the title.
 
     Returns:
-        the sparse matrix and the CountVectorizer object.
+        spmatrix: the sparse matrix Terms x Documents (a row is a term, a col is a document)
+        CountVectorizer: the vectorizer
+        list[str]: the document's ids.
     """
-    corpus, _, _ = load_dataset()
     doc_ids = list(corpus.keys())
     doc_titles = [corpus[doc_id]["title"] for doc_id in corpus]
     vectorizer = CountVectorizer()
@@ -36,6 +36,7 @@ def print_feats(v, features, top_n=30):
 def corpus_words_freq_distrib(
     X_corpus: spmatrix, features: np.ndarray, top_n: int = 30
 ):
+    """Returns the top_n most used words in the corpus as a vector and as a plot."""
     v = np.sum(X_corpus, axis=0)
 
     # 2. Affichage du tableau des top_n mots les plus fréquents
@@ -57,9 +58,14 @@ def corpus_words_freq_distrib(
     plt.show()
 
 
+def encode_query(query: str, vectorizer: CountVectorizer) -> spmatrix:
+    """Encode a query of multiple keywords using the vectorizer of the corpus."""
+    return vectorizer.transform([query])
+
+
 if __name__ == "__main__":
     corpus, _, _ = load_dataset()
-    X_corpus, vectoriser, doc_ids = encode_matrix()
+    X_corpus, vectoriser, doc_ids = encode_matrix(corpus)
     print(f"Forme de la matrice: {X_corpus.shape}")
     features = vectoriser.get_feature_names_out()
 
@@ -67,7 +73,9 @@ if __name__ == "__main__":
     print("Example of a line of the sparse matrix:")
     k = 1
     print(f"Title: {corpus[doc_ids[k]]["title"]}")
-    print(print_feats(X_corpus[k], features))
+    print("Vector", print_feats(X_corpus[k], features))
 
     print("--")
-    corpus_words_freq_distrib(X_corpus, features)
+    n = 30
+    print(f"{n} most commons words of the corpus:")
+    corpus_words_freq_distrib(X_corpus, features, n)

@@ -76,6 +76,14 @@ def _load_qrels(file_path: Path = Path("dataset/valid.tsv")):
 
 
 def load_dataset():
+    """Load the dataset.
+
+    Returns:
+        tuple[dict, dict, dict]: A tuple containing:
+            - corpus: the corpus documents
+            - queries: the queries
+            - qrels: the relevance scores of queries
+    """
     corpus = _load_corpus()
     queries = _load_queries()
     qrels_valid = _load_qrels()
