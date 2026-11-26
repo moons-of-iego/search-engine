@@ -41,7 +41,7 @@ unzip dataset.zip -d dataset
 
 ---
 
-## Utilisation
+## Utilisation (branche maxence)
 
 Les scripts et modules peuvent être exécutés directement dans l'environnement géré par `uv` (sans activation manuelle du `.venv`) :
 
