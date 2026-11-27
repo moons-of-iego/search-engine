@@ -1,9 +1,18 @@
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import (
+    CountVectorizer,
+    TfidfVectorizer,
+    ENGLISH_STOP_WORDS,
+)
+import re
+from nltk.stem import SnowballStemmer
 from scipy.sparse import find, spmatrix
 from src.loader import load_dataset
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
+stemmer = SnowballStemmer(language="english")
+token_pattern = re.compile(r"(?u)\b\w\w+\b")
 
 
 def encode_matrix(corpus: dict) -> tuple[spmatrix, CountVectorizer, list[str]]:
@@ -19,6 +28,39 @@ def encode_matrix(corpus: dict) -> tuple[spmatrix, CountVectorizer, list[str]]:
     doc_ids = list(corpus.keys())
     doc_titles = [corpus[doc_id]["title"] for doc_id in corpus]
     vectorizer = CountVectorizer()
+    X_corpus = vectorizer.fit_transform(doc_titles)
+
+    return X_corpus, vectorizer, doc_ids
+
+
+def tokeniser(text: str) -> list[str]:
+    """
+    Performs tokenization for the sparse TFxIDF matrix implementation.
+    Tokenizes the text, filters the stop-words and applies stemming using the SnowBall algorithm.
+    Args:
+        text (str): the text to tokenize.
+
+    Returns:
+        list[str]: the list of the tokenized words (or semantic units, considering that the stemming step produces non-english words) from the text.
+    """
+    tokens = token_pattern.findall(text.lower())
+    return [stemmer.stem(token) for token in tokens if token not in ENGLISH_STOP_WORDS]
+
+
+def encode_matrix_tfidf(corpus: dict) -> tuple:
+    """
+    Encode corpus data on a TFxIDF matrix. Each line represent a corpus document title and each column is a word.
+    Each cell is the TFxIDF score of the col word in the row document.
+    This encoding remove the english stop words and the hapax (less than 2 occcurences).
+
+    Returns:
+        spmatrix: the sparse matrix Terms x Documents (a row is a term, a col is a document)
+        CountVectorizer: the vectorizer
+        list[str]: the document's ids.
+    """
+    doc_ids = list(corpus.keys())
+    doc_titles = [corpus[doc_id]["title"] for doc_id in corpus]
+    vectorizer = TfidfVectorizer(tokenizer=tokeniser, token_pattern=None, min_df=2)
     X_corpus = vectorizer.fit_transform(doc_titles)
 
     return X_corpus, vectorizer, doc_ids

@@ -59,3 +59,33 @@ uv run -m src.engine
 > Au premier lancement, `src/loader.py` sérialise automatiquement les fichiers bruts en format binaire (`.pkl`) dans `.cache/` afin d'accélérer les exécutions suivantes.
 
 ---
+
+## Détail du code développé
+
+### Chargement des données
+
+Le chargement est réalisé par la fonction `load_dataset` du module `src.loader`. Celui-ci créé un cache (format `pickle`) et appelle le cache s'il existe dans toutes les utilisations ultérieures de la fonction de chargement.
+
+### Analyse des données
+
+L'analyse est réalisée par le module `src.analyser`. L'analyse se limite strictement à la première de la partie "_2. Exploration des données et premier encodage_" des consignes du BE.
+
+### Encodage
+
+Tous les encodages développés sont dans le module `src.encoder`.
+
+#### Encodages par matrice creuse
+
+- `encode_matrix` réalise le premier encodage décrit dans les consignes de BE: une matrice creuse Termes x Documents où chaque cellule est la fréquence d'apparition du mot brut dans le texte. Le corpus est limité aux titres des articles.
+
+  ![Mots les plus fréquents dans le corpus (premier encodage)](results/words_frequency_raw.png)
+
+  > On observe que le top est dominé par des mots-outils qui n'apportent pas d'information et ne sont pas discriminants entre documents. L'utilisation des mots bruts fait que "_network_" et "_networks_" sont tous deux présents, mais que le modèle n'est pas capable de saisir leur proximité.
+
+---
+
+- `encode_matrix_tfidf` réalise un approfondissement de ce premier encodage. Elle réalise plusieurs étapes de tokenization (via la fonction `tokenizer`): découpage du texte en tokens selon le même pattern que celui utilisé nativement par `scikit-learn`, filtrage des mots-outils et stemming par l'algorithme SnowBall. Elle encode une matrice creuse Termes x Documents où chaque cellule est le score TFxIDF d'une unité sémantique du corpus (on ne parle plus forcément de mots ici, puisque le stemming peut créer des mots qui n'existent pas dans le dictionnaire).
+
+  ![Mots les plus fréquents dans le corpus (encodage TFxIDF)](results/words_frequency_tfidf.png)
+
+  > On observe que les mots plus fréquents apportent beaucoup plus d'information que les mots-outils, et que le stemming a produit certaines expresssions qui ont un fort sens sémantique mais n'existent pas dans le dictionnaire, comme "_analysi_".
